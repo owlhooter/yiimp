@@ -79,6 +79,7 @@ function BackendPricesUpdate()
 			} else {
 				#convert to MAZA
 				$coin->price = ($market->price / $maza->price)*(1-YAAMP_FEES_EXCHANGE/100);
+				$coin->price_btc = $market->price;
 				$coin->price2 = $market->price2 / $maza->price;
 
 				$base_coin = !empty($market->base_coin)? getdbosql('db_coins', "symbol='{$market->base_coin}'"): null;
