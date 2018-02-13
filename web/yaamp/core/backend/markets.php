@@ -35,7 +35,7 @@ function BackendPricesUpdate()
 	updateOtherMarkets();
 	#Set price in terms of MAZA
 	$maza = getdbosql('db_coins', "symbol='MAZA'");
-	$mazaprice = $maza->price;
+	
 	$list2 = getdbolist('db_coins', "installed AND IFNULL(symbol2,'') != ''");
 	foreach($list2 as $coin2)
 	{
@@ -71,17 +71,15 @@ function BackendPricesUpdate()
 		$market = getBestMarket($coin);
 		if($market)
 		{
-			if($coin->symbol=='MAZA') {
+			if($coin->symbol=='MAZA' or $coin->symbol=='MZC') {
 				$coin->price = $market->price*(1-YAAMP_FEES_EXCHANGE/100);
 				$coin->price2 = $market->price2;
 				
 				
 			} else {
 				#convert to MAZA
-				$toMAZA = $market->price / $mazaprice;
-				$coin->price = $toMAZA*(1-YAAMP_FEES_EXCHANGE/100);
-				$toMAZA2 = $market->price2 / $mazaprice;
-				$coin->price2 = $toMAZA2;
+				$coin->price = ($market->price / $maza->price)*(1-YAAMP_FEES_EXCHANGE/100);
+				$coin->price2 = $market->price2 / $maza->price;
 
 				$base_coin = !empty($market->base_coin)? getdbosql('db_coins', "symbol='{$market->base_coin}'"): null;
 				if($base_coin)
