@@ -33,7 +33,11 @@ function BackendPricesUpdate()
 
 	updateShapeShiftMarkets();
 	updateOtherMarkets();
-
+	#Set price in terms of MAZA
+	$maza = getdbosql('db_coins', "symbol='MAZA'");
+	$mazamarketid = getdbolist('db_markets', "coinid=$maza->id");
+	$mazamarket =  getdbosql('db_markets', "coinid=$maza->id and name='$mazamarketid->name'");
+	$mazaprice = $mazamarket->price;
 	$list2 = getdbolist('db_coins', "installed AND IFNULL(symbol2,'') != ''");
 	foreach($list2 as $coin2)
 	{
@@ -41,11 +45,12 @@ function BackendPricesUpdate()
 		if(!$coin) continue;
 
 		$list = getdbolist('db_markets', "coinid=$coin->id");
+		
 		foreach($list as $market)
 		{
 			$market2 = getdbosql('db_markets', "coinid=$coin2->id and name='$market->name'");
 			if(!$market2) continue;
-
+		
 			$market2->price = $market->price;
 			$market2->price2 = $market->price2;
 			$market2->deposit_address = $market->deposit_address;
@@ -64,18 +69,28 @@ function BackendPricesUpdate()
 			$coin->save();
 			continue;
 		}
-
+		
 		$market = getBestMarket($coin);
 		if($market)
 		{
-			$coin->price = $market->price*(1-YAAMP_FEES_EXCHANGE/100);
-			$coin->price2 = $market->price2;
+			if($coin->symbol=='MAZA') {
+				$coin->price = $market->price*(1-YAAMP_FEES_EXCHANGE/100);
+				$coin->price2 = $market->price2;
+				
+				
+			} else {
+				#convert to MAZA
+				$toMAZA = $market->price / $mazaprice;
+				$coin->price = $toMAZA*(1-YAAMP_FEES_EXCHANGE/100);
+				$toMAZA2 = $market->price2 / $mazaprice;
+				$coin->price2 = $toMAZA2;
 
-			$base_coin = !empty($market->base_coin)? getdbosql('db_coins', "symbol='{$market->base_coin}'"): null;
-			if($base_coin)
-			{
-				$coin->price *= $base_coin->price;
-				$coin->price2 *= $base_coin->price;
+				$base_coin = !empty($market->base_coin)? getdbosql('db_coins', "symbol='{$market->base_coin}'"): null;
+				if($base_coin)
+				{
+					$coin->price *= $base_coin->price;
+					$coin->price2 *= $base_coin->price;
+				}
 			}
 		}
 		else {
