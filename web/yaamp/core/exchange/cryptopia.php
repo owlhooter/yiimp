@@ -109,7 +109,12 @@ function cryptopia_update_market($market)
 		$symbol = $market;
 		$coin = getdbosql('db_coins', "symbol=:sym", array(':sym'=>$symbol));
 		if(!$coin) return false;
-		$pair = $symbol.'_BTC';
+		// create MAZA BTC pair for trading
+		if($symbol == "BTC") {
+			$pair = 'MZC_'.$symbol;
+		} else {
+			$pair = $symbol.'_BTC';
+		}
 		$market = getdbosql('db_markets', "coinid={$coin->id} AND name='$exchange'");
 		if(!$market) return false;
 
@@ -118,7 +123,12 @@ function cryptopia_update_market($market)
 		$coin = getdbo('db_coins', $market->coinid);
 		if(!$coin) return false;
 		$symbol = $coin->getOfficialSymbol();
-		$pair = $symbol.'_BTC';
+		// create MAZA BTC pair for trading
+		if($symbol == "BTC") {
+			$pair = 'MZC_'.$symbol;
+		} else {
+			$pair = $symbol.'_BTC';
+		}
 		if (!empty($market->base_coin)) $pair = $symbol.'_'.$market->base_coin;
 	}
 
