@@ -35,9 +35,7 @@ function BackendPricesUpdate()
 	updateOtherMarkets();
 	#Set price in terms of MAZA
 	$maza = getdbosql('db_coins', "symbol='MAZA'");
-	$mazamarketid = getdbolist('db_markets', "coinid=$maza->id");
-	$mazamarket =  getdbosql('db_markets', "coinid=$maza->id and name='$mazamarketid->name'");
-	$mazaprice = $mazamarket->price;
+	$mazaprice = $maza->price;
 	$list2 = getdbolist('db_coins', "installed AND IFNULL(symbol2,'') != ''");
 	foreach($list2 as $coin2)
 	{
