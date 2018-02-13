@@ -175,8 +175,8 @@ function BackendStatsUpdate()
 	$step = 15;
 	$tm = floor(time()/$step/60)*$step*60;
 
-	$btc = getdbosql('db_coins', "symbol='BTC'");
-	if (!$btc) $btc = json_decode('{"id": 6, "balance": 0}');
+	$btc = getdbosql('db_coins', "symbol='MAZA'");
+	if (!$btc) $btc = json_decode('{"id": 686, "balance": 0}');
 
 	$topay = dboscalar("select sum(balance) from accounts where coinid=$btc->id");	//here: take other currencies too
 	$margin = $btc->balance - $topay;
@@ -187,7 +187,7 @@ function BackendStatsUpdate()
 	$immature = dboscalar("select sum(amount*price) from earnings where status=0");
 	$confirmed = dboscalar("select sum(amount*price) from earnings where status=1");
 
-	$wallets = dboscalar("select sum(balance*price) from coins where enable and symbol!='BTC'");
+	$wallets = dboscalar("select sum(balance*price) from coins where enable and symbol!='MAZA'");
 	$renters = dboscalar("select sum(balance) from renters");
 
 	$mints = dboscalar("select sum(mint*price) from coins where enable");
