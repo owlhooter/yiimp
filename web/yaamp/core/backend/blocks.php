@@ -423,7 +423,7 @@ function MonitorBTC()
 {
 //	debuglog(__FUNCTION__);
 
-	$coin = getdbosql('db_coins', "symbol='BTC'");
+	$coin = getdbosql('db_coins', "symbol='MAZA'");
 	if(!$coin) return;
 
 	$remote = new WalletRPC($coin);
