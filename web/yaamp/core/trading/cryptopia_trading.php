@@ -231,10 +231,11 @@ function doCryptopiaTrading($quick=false)
 		sleep(1);
 		$data = cryptopia_api_query('GetMarketOrders', $market->marketid."/5");
 		if(!$data || !$data->Success || !$data->Data) continue;
-
+		$cont = false;
 		if($coin->sellonbid)
 		for($i = 0; $i < 5 && $amount >= 0; $i++)
 		{
+			if ($cont == true) continue;
 			//Buy MAZA
 			if ($balance->Symbol == 'BTC') {
 				if(!isset($data->Data->Sell[$i])) break;
@@ -246,8 +247,10 @@ function doCryptopiaTrading($quick=false)
 				
 				$sellamount = min($amount/$sellprice, $nextbuy->Volume);
 
-				if($sellamount*$sellprice < $min_btc_trade) continue;
-
+				if($sellamount*$sellprice < $min_btc_trade) {
+					$cont=true;
+					continue;
+				}
 				debuglog("cryptopia: selling $sellamount $symbol at $sellprice");
 				sleep(1);
 				$params = array('TradePairId'=>$market->marketid, 'Type'=>'Buy', 'Rate'=>$sellprice, 'Amount'=>$sellamount);
@@ -267,8 +270,10 @@ function doCryptopiaTrading($quick=false)
 				$sellprice = bitcoinvaluetoa($nextbuy->Price);
 				$sellamount = min($amount, $nextbuy->Volume);
 
-				if($sellamount*$sellprice < $min_btc_trade) continue;
-
+				if($sellamount*$sellprice < $min_btc_trade) {
+					$cont=true;
+					continue;
+				}
 				debuglog("cryptopia: selling $sellamount $symbol at $sellprice");
 				sleep(1);
 				$params = array('TradePairId'=>$market->marketid, 'Type'=>'Sell', 'Rate'=>$sellprice, 'Amount'=>$sellamount);
