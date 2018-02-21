@@ -292,6 +292,7 @@ function doCryptopiaTrading($quick=false)
 		else
 			$sellprice = bitcoinvaluetoa($ticker->Data->AskPrice * $sell_ask_pct); // lowest ask price +5%
 		
+		$cont=false;
 		if ($balance->Symbol == 'BTC') {
 			if($amount < $min_btc_trade || !$market->marketid) $cont=true;
 			
