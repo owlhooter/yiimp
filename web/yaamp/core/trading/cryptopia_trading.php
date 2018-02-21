@@ -220,12 +220,14 @@ function doCryptopiaTrading($quick=false)
 		// new orders
 		$amount = floatval($balance->Available);
 		if(!$amount) continue;
+		$cont=false;
 		if ($balance->Symbol == 'BTC') {
-			if($amount < $min_btc_trade || !$market->marketid) continue;
+			if($amount < $min_btc_trade || !$market->marketid) $cont=true;
 			
 		} else {
-			if($amount*$coin->price_btc < $min_btc_trade || !$market->marketid) continue;
+			if($amount*$coin->price_btc < $min_btc_trade || !$market->marketid) $cont=true;
 		}
+		if ($cont == "true") continue;
 		sleep(1);
 		$data = cryptopia_api_query('GetMarketOrders', $market->marketid."/5");
 		if(!$data || !$data->Success || !$data->Data) continue;
@@ -289,12 +291,14 @@ function doCryptopiaTrading($quick=false)
 			$sellprice = bitcoinvaluetoa($ticker->Data->BidPrice);
 		else
 			$sellprice = bitcoinvaluetoa($ticker->Data->AskPrice * $sell_ask_pct); // lowest ask price +5%
+		
 		if ($balance->Symbol == 'BTC') {
-			if($amount < $min_btc_trade) continue;
+			if($amount < $min_btc_trade || !$market->marketid) $cont=true;
+			
+		} else {
+			if($amount*$coin->price_btc < $min_btc_trade || !$market->marketid) $cont=true;
 		}
-		else {
-			if($amount*$sellprice < $min_btc_trade) continue;
-		}
+		if ($cont == "true") continue;
 		debuglog("cryptopia: selling $amount $symbol at $sellprice");
 
 		sleep(1);
