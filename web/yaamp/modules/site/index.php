@@ -35,10 +35,10 @@ $payout_freq = (YAAMP_PAYMENTS_FREQ / 3600)." hours";
 
 <li>YiiMP is a pool management solution based on the Yii Framework.</li>
 <li>This fork was based on the yaamp source code and is now an open source project.</li>
-<li>No registration is required, we do payouts in the currency you mine. Use your wallet address as the username.</li>
+<li>No registration is required, we do payouts in MAZA. Use your MAZA wallet address as the username.</li>
 <li>&nbsp;</li>
 <li>Payouts are made automatically every <?= $payout_freq ?> for all balances above <b><?= $min_payout ?></b>, or <b><?= $min_sunday ?></b> on Sunday.</li>
-<li>For some coins, there is an initial delay before the first payout, please wait at least 6 hours before asking for support.</li>
+<li>There is an initial delay before the first payout, please wait at least 24 hours before asking for support.</li>
 <li>Blocks are distributed proportionally among valid submitted shares.</li>
 
 <br/>
@@ -61,7 +61,7 @@ $payout_freq = (YAAMP_PAYMENTS_FREQ / 3600)." hours";
 </li>
 
 <?php if (YAAMP_ALLOW_EXCHANGE): ?>
-<li>&lt;WALLET_ADDRESS&gt; can be one of any currency we mine or a BTC address.</li>
+<li>&lt;WALLET_ADDRESS&gt; can be one of any currency we mine or a MAZA address.</li>
 <?php else: ?>
 <li>&lt;WALLET_ADDRESS&gt; should be valid for the currency you mine. <b>DO NOT USE a BTC address here, the auto exchange is disabled</b>!</li>
 <?php endif; ?>
