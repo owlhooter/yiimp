@@ -1,8 +1,6 @@
 
 #include "stratum.h"
 
-//#define CLIENT_DEBUGLOG_
-
 bool client_suggest_difficulty(YAAMP_CLIENT *client, json_value *json_params)
 {
 	if(json_params->u.array.length>0)
@@ -88,9 +86,9 @@ bool client_subscribe(YAAMP_CLIENT *client, json_value *json_params)
 			memcpy(client->job_history, client1->job_history, sizeof(client->job_history));
 			client1->lock_count = 0;
 
-#ifdef CLIENT_DEBUGLOG_
-			debuglog("reconnecting client locked to %x\n", client->jobid_next);
-#endif
+			if (g_debuglog_client) {
+				debuglog("reconnecting client locked to %x\n", client->jobid_next);
+			}
 		}
 
 		else
@@ -106,9 +104,9 @@ bool client_subscribe(YAAMP_CLIENT *client, json_value *json_params)
 				memcpy(client->job_history, client1->job_history, sizeof(client->job_history));
 				client1->lock_count = 0;
 
-#ifdef CLIENT_DEBUGLOG_
-				debuglog("reconnecting2 client\n");
-#endif
+				if (g_debuglog_client) {
+					debuglog("reconnecting2 client\n");
+				}
 			}
 		}
 	}
@@ -116,9 +114,9 @@ bool client_subscribe(YAAMP_CLIENT *client, json_value *json_params)
 	strcpy(client->extranonce1_last, client->extranonce1);
 	client->extranonce2size_last = client->extranonce2size;
 
-#ifdef CLIENT_DEBUGLOG_
-	debuglog("new client with nonce %s\n", client->extranonce1);
-#endif
+	if (g_debuglog_client) {
+		debuglog("new client with nonce %s\n", client->extranonce1);
+	}
 
 	client_send_result(client, "[[[\"mining.set_difficulty\",\"%.3g\"],[\"mining.notify\",\"%s\"]],\"%s\",%d]",
 		client->difficulty_actual, client->notify_id, client->extranonce1, client->extranonce2size);
@@ -236,9 +234,9 @@ bool client_authorize(YAAMP_CLIENT *client, json_value *json_params)
 
 	client_initialize_difficulty(client);
 
-#ifdef CLIENT_DEBUGLOG_
-	debuglog("new client %s, %s, %s\n", client->username, client->password, client->version);
-#endif
+	if (g_debuglog_client) {
+		debuglog("new client %s, %s, %s\n", client->username, client->password, client->version);
+	}
 
 	if(!client->userid || !client->workerid)
 	{
@@ -300,14 +298,18 @@ bool client_update_block(YAAMP_CLIENT *client, json_value *json_params)
 		return false;
 	}
 
-	YAAMP_COIND *coind = (YAAMP_COIND *)object_find(&g_list_coind, json_params->u.array.values[1]->u.integer, true);
+	int coinid = json_params->u.array.values[1]->u.integer;
+	if(!coinid) return false;
+	YAAMP_COIND *coind = (YAAMP_COIND *)object_find(&g_list_coind, coinid, true);
 	if(!coind) return false;
 
 	const char* hash = json_params->u.array.values[2]->u.string.ptr;
 
-#ifdef CLIENT_DEBUGLOG_
-	debuglog("notify: new %s block %s\n", coind->symbol, hash);
-#endif
+	if (g_debuglog_client) {
+		debuglog("notify: new %s block %s\n", coind->symbol, hash);
+	}
+
+	snprintf(coind->lastnotifyhash, 161, "%s", hash);
 
 	coind->newblock = true;
 	coind->notreportingcounter = 0;
@@ -578,9 +580,9 @@ void *client_thread(void *p)
 			break;
 		}
 
-#ifdef CLIENT_DEBUGLOG_
-		debuglog("client %s %d %s\n", method, client->id_int, client->id_str? client->id_str: "null");
-#endif
+		if (g_debuglog_client) {
+			debuglog("client %s %d %s\n", method, client->id_int, client->id_str? client->id_str: "null");
+		}
 
 		bool b = false;
 		if(!strcmp(method, "mining.subscribe"))
@@ -619,9 +621,7 @@ void *client_thread(void *p)
 		else if(!strcmp(method, "getwork"))
 		{
 			clientlog(client, "using getwork"); // client using http:// url
-			break;
 		}
-
 		else
 		{
 			b = client_send_error(client, 20, "Not supported");
@@ -636,10 +636,10 @@ void *client_thread(void *p)
 
 //	source_close(client->source);
 
-#ifdef CLIENT_DEBUGLOG_
-	debuglog("client terminate\n");
-#endif
-	if(!client || client->deleted) {
+	if (g_debuglog_client) {
+		debuglog("client terminate\n");
+	}
+	if(!client) {
 		pthread_exit(NULL);
 	}
 
@@ -657,9 +657,12 @@ void *client_thread(void *p)
 			db_clear_worker(g_db, client);
 			CommonUnlock(&g_db_mutex);
 		}
+		object_delete(client);
+	} else {
+		// only clients sockets in g_list_client are purged (if marked deleted)
+		socket_close(client->sock);
+		delete client;
 	}
-
-	object_delete(client);
 
 	pthread_exit(NULL);
 }

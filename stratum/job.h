@@ -52,6 +52,9 @@ struct YAAMP_JOB_TEMPLATE
 
 	bool has_segwit_txs;
 
+	bool has_filtered_txs;
+	int filtered_txs_fee;
+
 	int auxs_size;
 	YAAMP_COIND_AUX *auxs[MAX_AUXS];
 };

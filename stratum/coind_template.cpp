@@ -381,12 +381,20 @@ YAAMP_JOB_TEMPLATE *coind_create_template(YAAMP_COIND *coind)
 	txids.push_back("");
 
 	templ->has_segwit_txs = false;
-	// to force/test
-	// templ->has_segwit_txs = coind->usesegwit = (coind->usesegwit || g_stratum_segwit);
+
+	templ->has_filtered_txs = false;
+	templ->filtered_txs_fee = 0;
+
 	for(int i = 0; i < json_tx->u.array.length; i++)
 	{
 		const char *p = json_get_string(json_tx->u.array.values[i], "hash");
 		char hash_be[256] = { 0 };
+
+		if (templ->has_filtered_txs) {
+			templ->filtered_txs_fee += json_get_int(json_tx->u.array.values[i], "fee");
+			continue;
+		}
+
 		string_be(p, hash_be);
 		txhashes.push_back(hash_be);
 
@@ -396,7 +404,6 @@ YAAMP_JOB_TEMPLATE *coind_create_template(YAAMP_COIND *coind)
 			string_be(txid, txid_be);
 			txids.push_back(txid_be);
 			if (strcmp(hash_be, txid_be)) {
-				//debuglog("%s segwit tx found, height %d\n", coind->symbol, templ->height);
 				templ->has_segwit_txs = true; // if not, its useless to generate a segwit block, bigger
 			}
 		} else {
@@ -405,6 +412,17 @@ YAAMP_JOB_TEMPLATE *coind_create_template(YAAMP_COIND *coind)
 
 		const char *d = json_get_string(json_tx->u.array.values[i], "data");
 		templ->txdata.push_back(d);
+
+		// if wanted, we can limit the count of txs to include
+		if (g_limit_txs_per_block && i >= g_limit_txs_per_block-2) {
+			debuglog("limiting block to %d first txs (of %d)\n", g_limit_txs_per_block, json_tx->u.array.length);
+			templ->has_filtered_txs = true;
+		}
+	}
+
+	if (templ->has_filtered_txs) {
+		// coinbasevalue is a total with all tx fees, need to reduce it if some are skipped
+		templ->value -= templ->filtered_txs_fee;
 	}
 
 	templ->txmerkles[0] = '\0';

@@ -152,6 +152,21 @@ function updateRawcoins()
 		}
 	}
 
+	if (!exchange_get('cryptobridge', 'disabled')) {
+		$list = cryptobridge_api_query('ticker');
+		if(is_array($list) && !empty($list))
+		{
+			dborun("UPDATE markets SET deleted=true WHERE name='cryptobridge'");
+			foreach($list as $ticker) {
+				$e = explode('_', $ticker->id);
+				if (strtoupper($e[1]) !== 'BTC')
+					continue;
+				$symbol = strtoupper($e[0]);
+				updateRawCoin('cryptobridge', $symbol);
+			}
+		}
+	}
+
 	if (!exchange_get('hitbtc', 'disabled')) {
 		$list = hitbtc_api_query('symbols');
 		if(is_object($list) && isset($list->symbols) && is_array($list->symbols))
@@ -375,7 +390,7 @@ function updateRawCoin($marketname, $symbol, $name='unknown')
 			}
 		}
 
-		if (in_array($marketname, array('nova','askcoin','binance','coinexchange','coinsmarkets','hitbtc'))) {
+		if (in_array($marketname, array('nova','askcoin','binance','coinexchange','coinsmarkets','cryptobridge','hitbtc'))) {
 			// don't polute too much the db with new coins, its better from exchanges with labels
 			return;
 		}

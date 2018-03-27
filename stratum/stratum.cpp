@@ -36,6 +36,19 @@ int g_stratum_max_cons = 5000;
 bool g_stratum_reconnect;
 bool g_stratum_renting;
 bool g_stratum_segwit = false;
+
+int g_limit_txs_per_block = 0;
+
+bool g_handle_haproxy_ips = false;
+int g_socket_recv_timeout = 600;
+
+bool g_debuglog_client;
+bool g_debuglog_hash;
+bool g_debuglog_socket;
+bool g_debuglog_rpc;
+bool g_debuglog_list;
+bool g_debuglog_remote;
+
 bool g_autoexchange = true;
 
 uint64_t g_max_shares = 0;
@@ -102,6 +115,7 @@ YAAMP_ALGO g_algos[] =
 
 	{"c11", c11_hash, 1, 0, 0},
 	{"x11", x11_hash, 1, 0, 0},
+	{"x12", x12_hash, 1, 0, 0},
 	{"x13", x13_hash, 1, 0, 0},
 	{"x14", x14_hash, 1, 0, 0},
 	{"x15", x15_hash, 1, 0, 0},
@@ -140,6 +154,7 @@ YAAMP_ALGO g_algos[] =
 	{"skein", skein_hash, 1, 0, 0},
 	{"tribus", tribus_hash, 1, 0, 0},
 	{"keccak", keccak256_hash, 0x80, 0, sha256_hash_hex },
+	{"keccakc", keccak256_hash, 0x100, 0, 0},
 	{"phi", phi_hash, 1, 0, 0},
 	{"polytimos", polytimos_hash, 1, 0, 0},
 	{"skunk", skunk_hash, 1, 0, 0},
@@ -151,8 +166,10 @@ YAAMP_ALGO g_algos[] =
 	{"skein2", skein2_hash, 1, 0, 0},
 	{"yescrypt", yescrypt_hash, 0x10000, 0, 0},
 	{"yescryptR16", yescryptR16_hash, 0x10000, 0, 0 },
+	{"yescryptR32", yescryptR32_hash, 0x10000, 0, 0 },
 	{"zr5", zr5_hash, 1, 0, 0},
 
+	{"a5a", a5a_hash, 0x10000, 0, 0},
 	{"hive", hive_hash, 0x10000, 0, 0},
 	{"m7m", m7m_hash, 0x10000, 0, 0},
 	{"veltor", veltor_hash, 1, 0, 0},
@@ -182,8 +199,6 @@ YAAMP_ALGO *stratum_find_algo(const char *name)
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////
-
-#include <dirent.h>
 
 int main(int argc, char **argv)
 {
@@ -235,6 +250,18 @@ int main(int argc, char **argv)
 	g_stratum_max_ttf = iniparser_getint(ini, "STRATUM:max_ttf", 0x70000000);
 	g_stratum_reconnect = iniparser_getint(ini, "STRATUM:reconnect", true);
 	g_stratum_renting = iniparser_getint(ini, "STRATUM:renting", true);
+	g_handle_haproxy_ips = iniparser_getint(ini, "STRATUM:haproxy_ips", g_handle_haproxy_ips);
+	g_socket_recv_timeout = iniparser_getint(ini, "STRATUM:recv_timeout", 600);
+
+	g_max_shares = iniparser_getint(ini, "STRATUM:max_shares", g_max_shares);
+	g_limit_txs_per_block = iniparser_getint(ini, "STRATUM:max_txs_per_block", 0);
+
+	g_debuglog_client = iniparser_getint(ini, "DEBUGLOG:client", false);
+	g_debuglog_hash = iniparser_getint(ini, "DEBUGLOG:hash", false);
+	g_debuglog_socket = iniparser_getint(ini, "DEBUGLOG:socket", false);
+	g_debuglog_rpc = iniparser_getint(ini, "DEBUGLOG:rpc", false);
+	g_debuglog_list = iniparser_getint(ini, "DEBUGLOG:list", false);
+	g_debuglog_remote = iniparser_getint(ini, "DEBUGLOG:remote", false);
 
 	iniparser_freedict(ini);
 
@@ -404,8 +431,8 @@ void *stratum_thread(void *p)
 			stratumlog("%s socket accept() error %d\n", g_stratum_algo, error);
 			failcount++;
 			usleep(50000);
-			if (error == 24 && failcount > 16) {
-				g_exiting = true;
+			if (error == 24 && failcount > 5) {
+				g_exiting = true; // happen when max open files is reached (see ulimit)
 				stratumlogdate("%s too much socket failure, exiting...\n", g_stratum_algo);
 				exit(error);
 			}

@@ -13,13 +13,15 @@ function strip_data($data)
 	return $out;
 }
 
-require_once("poloniex.php");
 require_once("bitstamp.php");
 require_once("bittrex.php");
-require_once("ccexapi.php");
 require_once("bleutrade.php");
+require_once("ccexapi.php");
 require_once("cexio.php");
+require_once("cryptobridge.php");
+require_once("cryptohub.php");
 require_once("kraken.php");
+require_once("poloniex.php");
 require_once("yobit.php");
 require_once("shapeshift.php");
 require_once("bter.php");
@@ -89,7 +91,11 @@ function getMarketUrl($coin, $marketName)
 	else if($market == 'coinexchange')
 		$url = "https://www.coinexchange.io/market/{$symbol}/{$base}";
 	else if($market == 'coinsmarkets')
-		$url = " https://coinsmarkets.com/trade-{$base}-{$symbol}.htm";
+		$url = "https://coinsmarkets.com/trade-{$base}-{$symbol}.htm";
+	else if($market == 'cryptobridge')
+		$url = "https://wallet.crypto-bridge.org/market/BRIDGE.{$symbol}_BRIDGE.{$base}";
+	else if($market == 'cryptohub')
+		$url = "https://cryptohub.online/market/{$symbol}/{$base}";
 	else if($market == 'cryptopia')
 		$url = "https://www.cryptopia.co.nz/Exchange?market={$symbol}_{$base}";
 	else if($market == 'cryptowatch')

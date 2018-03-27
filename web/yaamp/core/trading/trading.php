@@ -78,6 +78,10 @@ function runExchange($exchangeName=false)
 				updateCryptopiaMarkets();
 				break;
 
+			case 'cryptobridge':
+				updateCryptoBridgeMarkets();
+				break;
+
 			case 'bitstamp':
 				getBitstampBalances();
 				break;

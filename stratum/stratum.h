@@ -19,6 +19,7 @@
 #include <mysql.h>
 #include <errmsg.h>
 #include <ifaddrs.h>
+#include <dirent.h>
 
 #include <iostream>
 #include <vector>
@@ -87,6 +88,17 @@ extern int g_stratum_max_ttf;
 extern bool g_stratum_reconnect;
 extern bool g_stratum_renting;
 extern bool g_stratum_segwit;
+extern int g_limit_txs_per_block;
+
+extern bool g_handle_haproxy_ips;
+extern int g_socket_recv_timeout;
+
+extern bool g_debuglog_client;
+extern bool g_debuglog_hash;
+extern bool g_debuglog_socket;
+extern bool g_debuglog_rpc;
+extern bool g_debuglog_list;
+extern bool g_debuglog_remote;
 
 extern uint64_t g_max_shares;
 extern uint64_t g_shares_counter;
@@ -134,9 +146,11 @@ void scrypt_N_R_1_256(const char* input, char* output, uint32_t N, uint32_t R, u
 void sha256_hash_hex(const char *input, char *output, unsigned int len);
 void sha256_double_hash_hex(const char *input, char *output, unsigned int len);
 
+#include "algos/a5a.h"
 #include "algos/c11.h"
 #include "algos/x11.h"
 #include "algos/x11evo.h"
+#include "algos/x12.h"
 #include "algos/x13.h"
 #include "algos/x14.h"
 #include "algos/x15.h"
